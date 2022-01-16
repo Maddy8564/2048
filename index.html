@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+    />
+
+    <style>
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <v-main>
+          <v-container
+            class="center"
+            v-touch="{
+                left: () => swipe('ArrowLeft'),
+                right: () => swipe('ArrowRight'),
+                up: () => swipe('ArrowUp'),
+                down: () => swipe('ArrowDown')
+            }"
+          >
+            <v-row dense justify="center" v-for="row in rows" :key="row">
+              <v-col cols="3" sm="2" md="2" lg="1" v-for="col in cols">
+                <v-responsive aspect-ratio="1">
+                  <v-fade-transition>
+                    <v-sheet
+                      v-show="data[row-1][col-1]"
+                      rounded
+                      :color="colors[data[row-1][col-1]] || 'grey lighten-3'"
+                      height="100%"
+                      class="d-flex"
+                    >
+                      <div class="font-weight-bold text-h4 white--text ma-auto">
+                        {{data[row-1][col-1]}}
+                      </div>
+                    </v-sheet>
+                  </v-fade-transition>
+                </v-responsive>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-main>
+      </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+    <script>
+      new Vue({
+        el: '#app',
+        vuetify: new Vuetify(),
+        data() {
+          return {
+            rows: 4,
+            cols: 4,
+            colors: {
+              2: 'blue lighten-4',
+              4: 'blue lighten-3',
+              8: 'blue lighten-2',
+              16: 'blue lighten-1',
+              32: 'blue darken-1',
+              64: 'blue darken-2',
+              128: 'blue darken-3',
+              256: 'blue darken-4',
+
+              512: 'indigo lighten-4',
+              1024: 'indigo lighten-3',
+              2048: 'indigo lighten-2',
+              4096: 'indigo lighten-1',
+              8192: 'indigo darken-1',
+              16384: 'indigo darken-2',
+              32768: 'indigo darken-3',
+              65536: 'indigo darken-4',
+            },
+            data: _.times(4, () => _.times(4, (x) => null)),
+          };
+        },
+        created() {
+          this.setData();
+          this.setData();
+          window.addEventListener('keydown', this.onKeyDown);
+        },
+        beforeDestroy() {
+          window.removeEventListener('keydown', this.onKeyDown);
+        },
+        methods: {
+          onKeyDown(e) {
+            this.swipe(e.key);
+          },
+          setData() {
+            const array = [];
+            this.data.forEach((row, rowIndex) => {
+              row.forEach((col, colIndex) => {
+                if (!col) {
+                  array.push({ row: rowIndex, col: colIndex });
+                }
+              });
+            });
+
+            const closer = () => {
+              const { row, col } = _.shuffle(array)[0];
+              this.data[row][col] = _.shuffle([2, 4])[0];
+            };
+
+            if (array.length) {
+              closer();
+            }
+
+            this.$forceUpdate();
+          },
+          rotate() {
+            const clone = _.cloneDeep(this.data);
+            this.data.forEach((row, rowIndex) => {
+              row.forEach((col, colIndex) => {
+                this.data[colIndex][rowIndex] = clone[rowIndex][colIndex];
+              });
+            });
+          },
+          swipeLeft() {
+            for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
+              const row = this.data[rowIndex];
+
+              for (let colIndex = 0; colIndex < row.length; colIndex++) {
+                if (row[colIndex]) {
+                  const nextIndex = row.findIndex(
+                    (_col, _colIndex) => _col && _colIndex > colIndex
+                  );
+
+                  if (nextIndex > -1 && row[colIndex] === row[nextIndex]) {
+                    row[colIndex] = row[colIndex] + row[nextIndex];
+                    row[nextIndex] = null;
+                  }
+                }
+              }
+
+              for (let colIndex = 0; colIndex < row.length; colIndex++) {
+                if (!row[colIndex]) {
+                  const nextIndex = row.findIndex(
+                    (_col, _colIndex) => _col && _colIndex > colIndex
+                  );
+                  if (nextIndex > -1) {
+                    row[colIndex] = row[nextIndex];
+                    row[nextIndex] = null;
+                  }
+                }
+              }
+            }
+          },
+          swipeRight() {
+            for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
+              const row = this.data[rowIndex];
+
+              for (let colIndex = row.length - 1; colIndex > -1; colIndex--) {
+                if (row[colIndex]) {
+                  const nextIndex = row.findLastIndex(
+                    (_col, _colIndex) => _col && _colIndex < colIndex
+                  );
+
+                  if (nextIndex > -1 && row[colIndex] === row[nextIndex]) {
+                    row[colIndex] = row[colIndex] + row[nextIndex];
+                    row[nextIndex] = null;
+                  }
+                }
+              }
+
+              for (let colIndex = row.length - 1; colIndex > -1; colIndex--) {
+                if (!row[colIndex]) {
+                  const nextIndex = row.findLastIndex(
+                    (_col, _colIndex) => _col && _colIndex < colIndex
+                  );
+                  if (nextIndex > -1) {
+                    row[colIndex] = row[nextIndex];
+                    row[nextIndex] = null;
+                  }
+                }
+              }
+            }
+          },
+          swipe(direction) {
+            let array = [];
+
+            switch (direction) {
+              case 'ArrowLeft':
+                this.swipeLeft();
+                break;
+
+              case 'ArrowRight':
+                this.swipeRight();
+                break;
+
+              case 'ArrowUp':
+                this.rotate();
+                this.swipeLeft();
+                this.rotate();
+                break;
+
+              case 'ArrowDown':
+                this.rotate();
+                this.swipeRight();
+                this.rotate();
+                break;
+            }
+
+            this.setData();
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
