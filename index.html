@@ -105,6 +105,7 @@
               65536: 'indigo darken-4',
             },
             data: [],
+            initials: [2, 4],
           };
         },
         created() {
@@ -130,18 +131,14 @@
             this.data.forEach((row, rowIndex) => {
               row.forEach((col, colIndex) => {
                 if (!col) {
-                  array.push({ row: rowIndex, col: colIndex });
+                  array.push({ rowIndex, colIndex });
                 }
               });
             });
 
-            const closer = () => {
-              const { row, col } = _.shuffle(array)[0];
-              this.data[row][col] = _.shuffle([2, 4])[0];
-            };
-
             if (array.length) {
-              closer();
+              const { rowIndex, colIndex } = array[_.random(array.length - 1)];
+              this.data[rowIndex][colIndex] = this.initials[_.random(1)];
             }
 
             this.$forceUpdate();
